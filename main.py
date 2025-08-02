@@ -108,10 +108,7 @@ async def process_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Bot main setup
 def main():
-    application = Application.builder()\
-        .token(TOKEN)\
-        .timezone(pytz.timezone("Asia/Kolkata"))\
-        .build()
+    application = Application.builder().token(TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
 
