@@ -1,22 +1,23 @@
 import re
 import logging
+import pytz
 from telegram import Update
 from telegram.ext import (
     Application, CommandHandler, MessageHandler,
     ContextTypes, filters
 )
 
-# Enable logging
+# Logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
-# Replace with your actual bot token
+# 🔑 Replace with your real bot token
 TOKEN = "7718900835:AAGIrZdH5_XETNUBfV0AqhkQt0UydDvIw-I"
 
-# Start command handler
+# /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "🌟 <b>Bot is running!</b> 🌟\n\n"
@@ -28,7 +29,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode='HTML'
     )
 
-# Generate formatted caption
+# Caption generator
 def create_formatted_caption(data: dict, file_type: str):
     common = (
         f"<b>📝 Title: {data.get('title', 'Untitled')}</b>\n\n"
@@ -41,7 +42,7 @@ def create_formatted_caption(data: dict, file_type: str):
     else:
         return f"<b>📄 DOC_ID: {data.get('id', '000')}.</b>\n\n{common}"
 
-# Message processor
+# Main handler for messages
 async def process_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         message = update.message or update.channel_post
@@ -52,7 +53,7 @@ async def process_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         data = {}
         file_type = "video" if message.video else "pdf"
 
-        # New Format
+        # Format 1: New Index format
         if "➭ Index »" in caption:
             index_match = re.search(r"➭ Index » (.+)", caption)
             title_match = re.search(r"➭ Title » \((.+?)\) (.+)", caption) or re.search(r"➭ Title » (.+)", caption)
@@ -68,7 +69,7 @@ async def process_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if batch_match:
                 data['batch'] = batch_match.group(1).strip()
 
-        # Original Video Format
+        # Format 2: Old video
         elif "Lecture Name ➜" in caption:
             lecture_match = re.search(r"Lecture Name ➜ (.+)\.mp4", caption)
             batch_match = re.search(r"Batch Name ➜ (.+)", caption)
@@ -80,7 +81,7 @@ async def process_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if batch_match:
                 data['batch'] = batch_match.group(1).strip()
 
-        # PDF Format
+        # Format 3: PDF
         elif "Name »" in caption:
             name_match = re.search(r"Name » (.+)\.pdf", caption)
             batch_match = re.search(r"Batch » (.+)", caption)
@@ -92,7 +93,7 @@ async def process_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if batch_match:
                 data['batch'] = batch_match.group(1).strip()
 
-        # If parsed, replace caption
+        # If parsed successfully, update the caption
         if data:
             new_caption = create_formatted_caption(data, file_type)
             await context.bot.edit_message_caption(
@@ -103,20 +104,24 @@ async def process_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
 
     except Exception as e:
-        logger.exception("Error while processing message")
+        logger.exception("Error processing message")
 
-# Main runner
+# Bot main setup
 def main():
-    application = Application.builder().token(TOKEN).build()
+    application = Application.builder()\
+        .token(TOKEN)\
+        .timezone(pytz.timezone("Asia/Kolkata"))\
+        .build()
 
     application.add_handler(CommandHandler("start", start))
+
     application.add_handler(MessageHandler(
-        (filters.VIDEO | filters.Document.PDF) & filters.Caption()
-        & (filters.ChatType.PRIVATE | filters.ChatType.CHANNEL),
+        (filters.VIDEO | filters.Document.PDF) & filters.Caption() &
+        (filters.ChatType.PRIVATE | filters.ChatType.CHANNEL),
         process_message
     ))
 
-    logger.info("Bot started!")
+    logger.info("Bot is running...")
     application.run_polling()
 
 if __name__ == '__main__':
