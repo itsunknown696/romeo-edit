@@ -1,5 +1,6 @@
 import re
 import logging
+import pytz  # Import pytz for timezone support
 from telegram import Update
 from telegram.ext import (
     Application,
@@ -16,7 +17,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
+TOKEN = "value"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
@@ -34,17 +35,17 @@ def create_formatted_caption(data: dict, file_type: str):
     if file_type == "video":
         return (
             f"<b>🎞️ VID_ID: {data.get('id', '000')}.</b>\n\n"
-            f"<b>📝 Title:</b> {data.get('title', 'Untitled')}\n\n"
-            f"<b>📚 Batch Name:</b> {data.get('batch', 'Unknown Batch')}\n\n"
-            f"<b>📥 Provided By:</b> @itachi_xd\n\n"
+            f"<b>📝 Title: {data.get('title', 'Untitled')}</b>\n\n"
+            f"<b>📚 Batch Name: {data.get('batch', 'Unknown Batch')}</b>\n\n"
+            f"<b>📥 Provided By: @itachi_xd</b>\n\n"
             f"<b>━━━━━✦ιтα¢нι✦━━━━━</b>"
         )
     else:  # PDF
         return (
             f"<b>📄 DOC_ID: {data.get('id', '000')}.</b>\n\n"
-            f"<b>📝 Title:</b> {data.get('title', 'Untitled')}\n\n"
-            f"<b>📚 Batch Name:</b> {data.get('batch', 'Unknown Batch')}\n\n"
-            f"<b>📥 Provided By:</b> @itachi_xd\n\n"
+            f"<b>📝 Title: {data.get('title', 'Untitled')}</b>\n\n"
+            f"<b>📚 Batch Name: {data.get('batch', 'Unknown Batch')}</b>\n\n"
+            f"<b>📥 Provided By: @itachi_xd</b>\n\n"
             f"<b>━━━━━✦ιтα¢нι✦━━━━━</b>"
         )
 
@@ -115,7 +116,12 @@ async def process_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     """Start the bot."""
     try:
-        application = Application.builder().token(TOKEN).build()
+        # Create Application with timezone setting
+        application = Application.builder() \
+            .token(TOKEN) \
+            .post_init(lambda app: logger.info("Bot initialized")) \
+            .post_shutdown(lambda app: logger.info("Bot shutting down")) \
+            .build()
         
         application.add_handler(CommandHandler("start", start))
         application.add_handler(MessageHandler(
@@ -131,4 +137,18 @@ def main():
         logger.error(f"Failed to start bot: {e}")
 
 if __name__ == '__main__':
+    # Install required packages if not already installed
+    import subprocess
+    import sys
+    
+    def install(package):
+        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+    
+    try:
+        import pytz
+        import telegram
+    except ImportError:
+        install('pytz')
+        install('python-telegram-bot')
+    
     main()
