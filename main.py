@@ -15,7 +15,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # 🔑 Replace with your real bot token
-TOKEN = "7718900835:AAGIrZdBfV0AqhkQt0UydDvIw-I"
+TOKEN = "7718900835:AAGIrZdH5_XETNUBfV0AqhkQt0UydDvIw-I"
 
 # /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -34,6 +34,7 @@ def create_formatted_caption(data: dict, file_type: str):
     common = (
         f"<b>📝 Title: {data.get('title', 'Untitled')}</b>\n\n"
         f"<b>📚 Batch Name: {data.get('batch', 'Unknown Batch')}</b>\n\n"
+        f"<b>📌 Topic: {data.get('topic', 'Not Specified')}</b>\n\n"
         f"<b>📥 Provided By: @itachi_xd</b>\n\n"
         f"<b>━━━━━✦ιтα¢нι✦━━━━━</b>"
     )
@@ -58,6 +59,7 @@ async def process_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             index_match = re.search(r"➭ Index » (.+)", caption)
             title_match = re.search(r"➭ Title » \((.+?)\) (.+)", caption) or re.search(r"➭ Title » (.+)", caption)
             batch_match = re.search(r"➭ [𝐁𝐁]𝐚𝐭𝐜𝐡 » (.+)", caption)
+            topic_match = re.search(r"➭ Topic » (.+)", caption)
 
             if index_match:
                 data['id'] = index_match.group(1).strip()
@@ -68,6 +70,8 @@ async def process_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     data['title'] = title_match.group(1)
             if batch_match:
                 data['batch'] = batch_match.group(1).strip()
+            if topic_match:
+                data['topic'] = topic_match.group(1).strip()
 
         # Format 2: Old video
         elif "Lecture Name ➜" in caption:
